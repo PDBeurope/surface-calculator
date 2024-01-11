@@ -1,3 +1,10 @@
+# Built files
+lib/
+
+# Mac junk
+.DS_Store
+
+
 # Logs
 logs
 *.log

@@ -1,0 +1,35 @@
+{
+  "name": "surface-calculator",
+  "version": "0.1.0",
+  "description": "",
+  "files": ["lib/"],
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "lint": "eslint src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/midlik/surface-calculator.git"
+  },
+  "author": "Adam Midlik",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/midlik/surface-calculator/issues"
+  },
+  "homepage": "https://github.com/midlik/surface-calculator#readme",
+  "dependencies": {
+    "gl": "^6.0.2",
+    "molstar": "^3.44.0"
+  },
+  "devDependencies": {
+    "@types/gl": "^6.0.5",
+    "@types/pngjs": "^6.0.4",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  }
+}
