@@ -18,7 +18,7 @@ import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/s
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 import { loadInputDataset } from './input';
-import { DefaultSurfaceOptions, QualityLevel, QualityLevels, computeSurface, exportGeometry } from './surface';
+import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, exportGeometry } from './surface';
 
 
 setFSModule(fs);
@@ -32,6 +32,7 @@ interface Args {
     source?: string,
     quality?: QualityLevel,
     probe?: number,
+    granularity?: Granularity,
 }
 
 /** Return parsed command line arguments for `main` */
@@ -42,6 +43,7 @@ function parseArguments(): Args {
     parser.add_argument('--source', { help: `Template for creating the URL of input structure file for a specify entry. {id} will be replaced by actual entry ID. Can use http:// or https:// or file:// protocol. Structure files can be in .cif or .bcif format. Default: ${DEFAULT_SOURCE}` });
     parser.add_argument('--quality', { choices: QualityLevels, help: `Surface quality level. Default: ${DefaultSurfaceOptions.quality}` });
     parser.add_argument('--probe', { type: Number, help: `Probe radius. Default: ${DefaultSurfaceOptions.probeRadius}` });
+    parser.add_argument('--granularity', { choices: Granularities, help: `'structure' to calculate surface of the structure as a whole, 'chain' to calculate surface of each chain separately. Default: ${DefaultSurfaceOptions.granularity}` });
     const args = parser.parse_args();
     return { ...args };
 }
@@ -57,7 +59,7 @@ async function main(args: Args): Promise<void> {
         console.log(`Processing ${filename}`);
 
         const url = (args.source ?? DEFAULT_SOURCE).replace('{id}', chainRef.entryId);
-        await computeSurface(plugin, { url, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe });
+        await computeSurface(plugin, { url, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe, granularity: args.granularity });
         await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`)); // DEBUG
         await exportGeometry(plugin, path.join(args.output_dir, `${filename}.zip`));
         await plugin.clear();

@@ -19,13 +19,18 @@ export interface StructureRef {
 export type QualityLevel = Exclude<VisualQuality, 'custom'>;
 export const QualityLevels = VisualQualityNames.filter(x => x !== 'custom');
 
+export type Granularity = 'structure' | 'chain';
+export const Granularities = ['structure', 'chain'] as Granularity[];
+
 export interface SurfaceOptions {
     probeRadius: number,
     quality: QualityLevel,
+    granularity: Granularity,
 }
 export const DefaultSurfaceOptions: SurfaceOptions = {
     probeRadius: 1.4,
     quality: 'high',
+    granularity: 'structure',
 };
 
 export async function computeSurface(plugin: PluginContext, structureRef: StructureRef, options?: Partial<SurfaceOptions>) {
@@ -63,6 +68,7 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
                     quality: options?.quality ?? DefaultSurfaceOptions.quality,
                     probeRadius: options?.probeRadius ?? DefaultSurfaceOptions.probeRadius,
                     sizeFactor: 1,
+                    visuals: (options?.granularity ?? DefaultSurfaceOptions.granularity) === 'structure' ? ['structure-molecular-surface-mesh'] : ['molecular-surface-mesh'],
                 },
             },
         })
