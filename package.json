@@ -2,7 +2,9 @@
   "name": "surface-calculator",
   "version": "0.1.0",
   "description": "",
-  "files": ["lib/"],
+  "files": [
+    "lib/"
+  ],
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
@@ -22,14 +24,15 @@
   "homepage": "https://github.com/midlik/surface-calculator#readme",
   "dependencies": {
     "gl": "^6.0.2",
-    "molstar": "^3.44.0"
+    "molstar": "~4.5.0"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^2.6.4",
     "@types/gl": "^6.0.5",
     "@types/pngjs": "^6.0.4",
-    "@typescript-eslint/eslint-plugin": "^6.18.1",
-    "@typescript-eslint/parser": "^6.18.1",
-    "eslint": "^8.56.0",
-    "typescript": "^5.3.3"
+    "eslint": "^9.9.0",
+    "jpeg-js": "^0.4.4",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.2.0"
   }
 }

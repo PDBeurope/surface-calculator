@@ -58,7 +58,7 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
                     probeRadius: options?.probeRadius ?? DefaultSurfaceOptions.probeRadius,
                     sizeFactor: 1,
                 },
-            }
+            },
         })
         .commit();
 }

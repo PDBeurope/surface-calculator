@@ -2,7 +2,7 @@ import { Structure } from 'molstar/lib/commonjs/mol-model/structure';
 import { Entities } from 'molstar/lib/commonjs/mol-model/structure/model/properties/common';
 
 
-type EntityType = ReturnType<Entities['data']['type']['value']>
+type EntityType = ReturnType<Entities['data']['type']['value']>;
 
 export interface ChainMapping {
     /** Maps each label_asym_id to corresponding auth_asym_id */
