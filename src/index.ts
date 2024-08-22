@@ -37,7 +37,7 @@ interface Args {
 /** Return parsed command line arguments for `main` */
 function parseArguments(): Args {
     const parser = new ArgumentParser({ description: 'Command-line application for computing molecular surfaces' });
-    parser.add_argument('input', { help: 'Input file with the list of chains to process (each line is {entry_id},{auth_chain_id})' });
+    parser.add_argument('input', { help: 'Input file with the list of chains to process (each line is either {entry_id},{auth_chain_id} or {entry_id} (to process all polymer chains))' });
     parser.add_argument('output_dir', { help: 'Path for output directory' });
     parser.add_argument('--source', { help: `Template for creating the URL of input structure file for a specify entry. {id} will be replaced by actual entry ID. Can use http:// or https:// or file:// protocol. Structure files can be in .cif or .bcif format. Default: ${DEFAULT_SOURCE}` });
     parser.add_argument('--quality', { choices: QualityLevels, help: `Surface quality level. Default: ${DefaultSurfaceOptions.quality}` });
@@ -53,11 +53,11 @@ async function main(args: Args): Promise<void> {
     fs.mkdirSync(args.output_dir, { recursive: true });
 
     for (const chainRef of dataset) {
-        console.log(`Processing ${chainRef.entryId}-${chainRef.chainId}`);
+        const filename = (chainRef.chainId !== undefined) ? `${chainRef.entryId}-${chainRef.chainId}` : chainRef.entryId;
+        console.log(`Processing ${filename}`);
+
         const url = (args.source ?? DEFAULT_SOURCE).replace('{id}', chainRef.entryId);
         await computeSurface(plugin, { url, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe });
-
-        const filename = `${chainRef.entryId}-${chainRef.chainId}`;
         await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`)); // DEBUG
         await exportGeometry(plugin, path.join(args.output_dir, `${filename}.zip`));
         await plugin.clear();

@@ -35,3 +35,18 @@ export function getChainMapping(structure: Structure): ChainMapping {
     }
     return { authToLabel, labelToAuth };
 }
+
+/** If `authChainId` is defined, return list of label_asym_ids for polymer chains with given `authChainId` (should be 1 element).
+ * If `authChainId` is undefined, return list of label_asym_ids for all polymer chains. */
+export function getPolymerLabelAsymIds(structure: Structure, authAsymId: string | undefined): string[] {
+    const chainMapping = getChainMapping(structure);
+    if (authAsymId !== undefined) {
+        // specific chain
+        const labelAsymId = chainMapping.authToLabel[authAsymId];
+        if (labelAsymId) return [labelAsymId];
+        else return [];
+    } else {
+        // all polymer chains
+        return Object.values(chainMapping.authToLabel);
+    }
+}

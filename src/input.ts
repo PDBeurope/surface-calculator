@@ -2,8 +2,10 @@ import fs from 'fs';
 
 
 export interface ChainRef {
+    /** PDB entry identifier or equivalent */
     entryId: string,
-    chainId: string,
+    /** auth_asym_id of selected chain (or `undefined` to process all chains) */
+    chainId: string | undefined,
 }
 
 export function loadInputDataset(file: string): ChainRef[] {

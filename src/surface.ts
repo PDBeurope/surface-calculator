@@ -1,17 +1,19 @@
 import fs from 'fs';
+import { GeometryControls } from 'molstar/lib/commonjs/extensions/geo-export/controls';
+import { VisualQuality, VisualQualityNames } from 'molstar/lib/commonjs/mol-geo/geometry/base';
 import { Download, ParseCif } from 'molstar/lib/commonjs/mol-plugin-state/transforms/data';
 import { ModelFromTrajectory, StructureComponent, StructureFromModel, TrajectoryFromMmCif } from 'molstar/lib/commonjs/mol-plugin-state/transforms/model';
 import { StructureRepresentation3D } from 'molstar/lib/commonjs/mol-plugin-state/transforms/representation';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
-import { GeometryControls } from 'molstar/lib/commonjs/extensions/geo-export/controls';
 import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
-import { VisualQuality, VisualQualityNames } from 'molstar/lib/commonjs/mol-geo/geometry/base';
-import { getChainMapping } from './chain-mapping';
+import { getPolymerLabelAsymIds } from './chain-mapping';
 
 
 export interface StructureRef {
+    /** URL of structure data file */
     url: string,
-    authChainId: string,
+    /** auth_asym_id of selected chain (or `undefined` to process all chains) */
+    authChainId: string | undefined,
 }
 
 export type QualityLevel = Exclude<VisualQuality, 'custom'>;
@@ -37,17 +39,21 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
         .commit();
 
     if (!structure.data) throw new Error('structure.data is undefined');
-    const chainMapping = getChainMapping(structure.data);
-    const labelAsymId = chainMapping.authToLabel[structureRef.authChainId];
+    const labelAsymIds = getPolymerLabelAsymIds(structure.data, structureRef.authChainId);
 
     const expr = MolScriptBuilder.struct.generator.atomGroups({
-        'chain-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(), labelAsymId]),
+        'chain-test': MolScriptBuilder.core.set.has([
+            MolScriptBuilder.set(...labelAsymIds),
+            MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(),
+        ]),
     });
 
     const component = await plugin.build()
         .to(structure)
         .apply(StructureComponent, { type: { name: 'expression', params: expr } })
         .commit();
+    if (!component.data || component.data.isEmpty) console.warn(`WARNING: Structure is empty (URL: ${structureRef.url}, chain: ${structureRef.authChainId ?? 'all chains'})`);
+
     const surface = await plugin.build()
         .to(component)
         .apply(StructureRepresentation3D, {
