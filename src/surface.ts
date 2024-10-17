@@ -3,6 +3,7 @@ import { GeometryControls } from 'molstar/lib/commonjs/extensions/geo-export/con
 import { VisualQuality, VisualQualityNames } from 'molstar/lib/commonjs/mol-geo/geometry/base';
 import { type GraphicsRenderObject } from 'molstar/lib/commonjs/mol-gl/render-object';
 import { Unit } from 'molstar/lib/commonjs/mol-model/structure';
+import { ResidueHydrophobicity } from 'molstar/lib/commonjs/mol-model/structure/model/types';
 import { Download, ParseCif } from 'molstar/lib/commonjs/mol-plugin-state/transforms/data';
 import { ModelFromTrajectory, StructureComponent, StructureFromModel, TrajectoryFromMmCif } from 'molstar/lib/commonjs/mol-plugin-state/transforms/model';
 import { StructureRepresentation3D } from 'molstar/lib/commonjs/mol-plugin-state/transforms/representation';
@@ -117,6 +118,7 @@ function getGroupProps(units: readonly Unit[]) {
         label_asym_id: [] as string[],
         auth_asym_id: [] as string[],
         label_entity_id: [] as string[],
+        residue_hydrophobicity_DGwif: [] as (number | null)[],
     };
     for (const unit of units) {
         const h = unit.model.atomicHierarchy;
@@ -133,10 +135,18 @@ function getGroupProps(units: readonly Unit[]) {
             props.label_asym_id.push(h.chains.label_asym_id.value(iChain));
             props.auth_asym_id.push(h.chains.auth_asym_id.value(iChain));
             props.label_entity_id.push(h.chains.label_entity_id.value(iChain));
+
+            const label_comp_id = h.atoms.label_comp_id.value(iElement);
+            props.residue_hydrophobicity_DGwif.push(hydrophobicity(label_comp_id, 'DGwif'));
         }
     }
     return props;
 }
+
+function hydrophobicity(label_comp_id: string, type: 'DGwif' | 'DGwoct' | 'Oct-IF') { // DGwif = DG water-membrane, DGwoct = DG water-octanol, Oct-IF = DG difference
+    return (ResidueHydrophobicity as Partial<Record<string, number[]>>)[label_comp_id]?.[scaleIndexMap.DGwif] ?? null;
+}
+const scaleIndexMap = { 'DGwif': 0, 'DGwoct': 1, 'Oct-IF': 2 };
 
 
 /** Return vertex properties (value per vertex) */
