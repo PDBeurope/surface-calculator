@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+- Option --metadata
+
 ## [0.2.0] - 2024-08-22
 
 - Allow processing all chains together

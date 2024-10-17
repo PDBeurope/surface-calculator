@@ -18,7 +18,7 @@ import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/s
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 import { loadInputDataset } from './input';
-import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, exportGeometry } from './surface';
+import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, exportGeometry, getSurfaceMetadata, niceJsonStringify } from './surface';
 
 
 setFSModule(fs);
@@ -33,6 +33,7 @@ interface Args {
     quality?: QualityLevel,
     probe?: number,
     granularity?: Granularity,
+    metadata?: boolean,
 }
 
 /** Return parsed command line arguments for `main` */
@@ -44,6 +45,7 @@ function parseArguments(): Args {
     parser.add_argument('--quality', { choices: QualityLevels, help: `Surface quality level. Default: ${DefaultSurfaceOptions.quality}` });
     parser.add_argument('--probe', { type: Number, help: `Probe radius. Default: ${DefaultSurfaceOptions.probeRadius}` });
     parser.add_argument('--granularity', { choices: Granularities, help: `'structure' to calculate surface of the structure as a whole, 'chain' to calculate surface of each chain separately. Default: ${DefaultSurfaceOptions.granularity}` });
+    parser.add_argument('--metadata', { action: 'store_true', help: 'Output additional file {filename}.metadata.json with mesh vertex metadata' });
     const args = parser.parse_args();
     return { ...args };
 }
@@ -59,9 +61,13 @@ async function main(args: Args): Promise<void> {
         console.log(`Processing ${filename}`);
 
         const url = (args.source ?? DEFAULT_SOURCE).replace('{id}', chainRef.entryId);
-        await computeSurface(plugin, { url, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe, granularity: args.granularity });
+        const surface = await computeSurface(plugin, { url, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe, granularity: args.granularity });
         await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`)); // DEBUG
         await exportGeometry(plugin, path.join(args.output_dir, `${filename}.zip`));
+        if (args.metadata) {
+            const surfaceMetadata = getSurfaceMetadata(surface);
+            fs.writeFileSync(path.join(args.output_dir, `${filename}.metadata.json`), niceJsonStringify(surfaceMetadata), { encoding: 'utf8' });
+        }
         await plugin.clear();
     }
 
@@ -81,21 +87,6 @@ async function createHeadlessPlugin(): Promise<HeadlessPluginContext> {
         throw error;
     }
     return plugin;
-}
-
-/** Parse integer, fail early. */
-function parseIntStrict(str: string): number {
-    if (str === '') throw new Error('Is empty string');
-    const result = Number(str);
-    if (isNaN(result)) throw new Error('Is NaN');
-    if (Math.floor(result) !== result) throw new Error('Is not integer');
-    return result;
-}
-
-/** Replace the file extension in `filename` by `extension`. If `filename` has no extension, add it. */
-function withExtension(filename: string, extension: string): string {
-    const oldExtension = path.extname(filename);
-    return filename.slice(0, -oldExtension.length) + extension;
 }
 
 
