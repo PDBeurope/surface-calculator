@@ -161,7 +161,12 @@ function getVertexProps(meshes: GraphicsRenderObject<'mesh'>[], unitOffsets: Rec
     for (let iMesh = 0; iMesh < meshes.length; iMesh++) {
         const mesh = meshes[iMesh];
         const groups = mesh.values.aGroup.ref.value;
-        for (let iVertex = 0; iVertex < groups.length; iVertex++) { // eslint-disable-line @typescript-eslint/prefer-for-of
+
+        // Clipping `groups` array because in practice it contains many more elements than just one-per-vertex (don't know why)
+        const metadataVertexCount: number | undefined = (mesh.values.meta.ref.value as any)?.originalData?.vertexCount;
+        const nVertices = (metadataVertexCount !== undefined) ? Math.min(metadataVertexCount, groups.length) : groups.length;
+
+        for (let iVertex = 0; iVertex < nVertices; iVertex++) {
             const groupIndexWithinMesh = groups[iVertex];
             const groupIndex = unitOffsets[iMesh] + groupIndexWithinMesh;
             props.group_index.push(groupIndex);
