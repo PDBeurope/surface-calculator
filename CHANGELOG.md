@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-03-14
+
 - Option --metadata
 - Option --molj
 - Possibility to specify assembly ID in input file
