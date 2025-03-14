@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file, following t
 ## [Unreleased]
 
 - Option --metadata
+- Option --molj
+- Possibility to specify assembly ID in input file
 
 ## [0.2.0] - 2024-08-22
 

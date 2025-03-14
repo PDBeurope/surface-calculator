@@ -1,7 +1,11 @@
 # Example input file
 
-1cbs,A
-1bvy,A
-1bvy,B
-1bvy,F
+1cbs-A
+1bvy-A
+1bvy-B
+1bvy-F
 1hda
+1e94
+1e94-E
+1e94_3
+1e94_3-E

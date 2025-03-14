@@ -15,6 +15,8 @@ import { getPolymerLabelAsymIds } from './chain-mapping';
 export interface StructureRef {
     /** URL of structure data file */
     url: string,
+    /** Assembly ID (`undefined` means deposited model) */
+    assemblyId: string | undefined,
     /** auth_asym_id of selected chain (or `undefined` to process all chains) */
     authChainId: string | undefined,
 }
@@ -43,7 +45,9 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
         .apply(ParseCif, {})
         .apply(TrajectoryFromMmCif, {})
         .apply(ModelFromTrajectory, { modelIndex: 0 })
-        .apply(StructureFromModel, { type: { name: 'model', params: {} } })
+        .apply(StructureFromModel, {
+            type: structureRef.assemblyId ? { name: 'assembly', params: { id: structureRef.assemblyId } } : { name: 'model', params: {} },
+        })
         .commit();
 
     if (!structure.data) throw new Error('structure.data is undefined');
