@@ -87,6 +87,7 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
 }
 
 export async function exportGeometry(plugin: PluginContext, filename: string) {
+    plugin.canvas3d?.commit(true); // need to commit canvas3d before it is exported
     const geo = new GeometryControls(plugin);
     geo.behaviors.params.next({ format: 'obj' });
     const data = await geo.exportGeometry();

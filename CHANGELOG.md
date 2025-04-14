@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+- Fixed bug (empty output when executed without --molj)
+
 ## [0.3.0] - 2025-03-14
 
 - Option --metadata
