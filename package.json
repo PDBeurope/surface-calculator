@@ -5,7 +5,11 @@
   "files": [
     "lib/"
   ],
-  "main": "lib/index.js",
+  "directories.lib": "lib/",
+  "bin": {
+    "surface-calculator": "lib/index.js"
+  },
+  "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",

@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2024-2025 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import { Structure } from 'molstar/lib/commonjs/mol-model/structure';
 import { Entities } from 'molstar/lib/commonjs/mol-model/structure/model/properties/common';
 

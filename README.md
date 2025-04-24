@@ -9,6 +9,14 @@ A simple Molstar-based command-line program to compute molecular surfaces and sa
 
 ## Installation
 
+### From NPM registry
+
+```sh
+npm install -g surface-calculator
+```
+
+### From source code
+
 ```sh
 git clone https://github.com/midlik/surface-calculator
 cd surface-calculator
@@ -18,15 +26,19 @@ npm run build
 
 ## Usage
 
+NOTE: The following examples assume you installed SurfaceCalculator globally with `npm install -g surface-calculator`. 
+If you installed locally in the current directory (`npm install surface-calculator`), use `npx surface-calculator` instead of `surface-calculator`. 
+If you cloned the git repository and built it, use `node ./lib/index.js` instead of `surface-calculator`.
+
 ```sh
-node lib/index.js --help
+surface-calculator --help
 
-node lib/index.js --input 1bvy-A 1bvy-B 1bvy-F --output-dir ../outputs/ --quality medium --probe 1.4
+surface-calculator --input 1bvy-A 1bvy-B 1bvy-F --output-dir ../outputs/ --quality medium --probe 1.4
 
-node lib/index.js --input-file examples/input.txt --output-dir ../outputs/ --quality medium --probe 1.4
+surface-calculator --input-file examples/input.txt --output-dir ../outputs/ --quality medium --probe 1.4
 
 # Run on local files:
-node lib/index.js --input-file examples/input.txt --output-dir ../outputs/ --quality medium --probe 1.4 --source 'file:///wherever/you/have/your/data/{id}.cif'
+surface-calculator --input-file examples/input.txt --output-dir ../outputs/ --quality medium --probe 1.4 --source 'file:///wherever/you/have/your/data/{id}.cif'
 # {id} will get replaced by the entry ID (e.g. 1bvy)
 ```
 
