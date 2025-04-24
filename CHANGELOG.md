@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+- CLI syntax changed (`node lib/index.js X Y` -> `node lib/index.js --input-file X --output-dir Y`)
+- Added --input parameter as alternative to --input-file
+
 ## [0.3.1] - 2025-04-14
 
 - Fixed bug (empty output when executed without --molj)

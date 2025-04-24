@@ -12,14 +12,17 @@ export interface ChainRef {
 
 export function loadInputDataset(file: string): ChainRef[] {
     const text = fs.readFileSync(file, { encoding: 'utf8' });
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('#'));
-    const result = [];
-    for (const line of lines) {
-        const [struct, chainId] = line.split(/[-,]/);
-        const [entryId, assemblyId] = struct.split('_');
-        result.push({ entryId, assemblyId, chainId });
-    }
-    return result;
+    const lines = text.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0 && !l.startsWith('#'));
+    return lines.map(parseChainRef);
+}
+
+/** Parse chain reference (e.g. 1e94_3-E) */
+export function parseChainRef(ref: string): ChainRef {
+    const [struct, chainId] = ref.split(/[-,]/);
+    const [entryId, assemblyId] = struct.split('_');
+    return { entryId, assemblyId, chainId };
 }
 
 /** Return filename for outputs (without file extension) */

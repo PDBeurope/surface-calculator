@@ -17,7 +17,7 @@ import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
-import { createFilename, loadInputDataset } from './input';
+import { createFilename, loadInputDataset, parseChainRef } from './input';
 import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, exportGeometry, getSurfaceMetadata, niceJsonStringify } from './surface';
 
 
@@ -27,7 +27,8 @@ const DEFAULT_SOURCE = 'https://www.ebi.ac.uk/pdbe/entry-files/download/{id}_upd
 
 /** Command line argument values for `main` */
 interface Args {
-    input: string,
+    input?: string[],
+    input_file?: string,
     output_dir: string,
     source?: string,
     quality?: QualityLevel,
@@ -40,21 +41,28 @@ interface Args {
 /** Return parsed command line arguments for `main` */
 function parseArguments(): Args {
     const parser = new ArgumentParser({ description: 'Command-line application for computing molecular surfaces' });
-    parser.add_argument('input', { help: 'Input file with the list of chains to process. Each line is {entry_id}_{assembly_id}-{auth_chain_id} (omit _{assembly_id} to process deposited model; omit -{auth_chain_id} to process all polymer chains)' });
-    parser.add_argument('output_dir', { help: 'Path for output directory' });
+
+    // Required params:
+    const inputGroup = parser.add_mutually_exclusive_group({ required: true });
+    inputGroup.add_argument('--input', { nargs: '*', help: 'Chains to process. Each argument is {entry_id}_{assembly_id}-{auth_chain_id} (omit _{assembly_id} to process deposited model; omit -{auth_chain_id} to process all polymer chains). Example: --input 1e94 1e94-E 1e94_3 1e94_3-E' });
+    inputGroup.add_argument('--input-file', { help: 'Input file with the list of chains to process. Each line is {entry_id}_{assembly_id}-{auth_chain_id} (omit _{assembly_id} to process deposited model; omit -{auth_chain_id} to process all polymer chains)' });
+    parser.add_argument('--output-dir', { required: true, help: 'Path for output directory' });
+
+    // Optional params:
     parser.add_argument('--source', { help: `Template for creating the URL of input structure file for a specify entry. {id} will be replaced by actual entry ID. Can use http:// or https:// or file:// protocol. Structure files can be in .cif or .bcif format. Default: ${DEFAULT_SOURCE}` });
     parser.add_argument('--quality', { choices: QualityLevels, help: `Surface quality level. Default: ${DefaultSurfaceOptions.quality}` });
     parser.add_argument('--probe', { type: Number, help: `Probe radius. Default: ${DefaultSurfaceOptions.probeRadius}` });
     parser.add_argument('--granularity', { choices: Granularities, help: `'structure' to calculate surface of the structure as a whole, 'chain' to calculate surface of each chain separately. Default: ${DefaultSurfaceOptions.granularity}` });
     parser.add_argument('--metadata', { action: 'store_true', help: 'Output additional file {filename}.metadata.json with mesh vertex metadata' });
     parser.add_argument('--molj', { action: 'store_true', help: 'Output additional file {filename}.molj with Molstar session, mostly for debugging' });
+
     const args = parser.parse_args();
     return { ...args };
 }
 
 /** Main workflow */
 async function main(args: Args): Promise<void> {
-    const dataset = loadInputDataset(args.input);
+    const dataset = args.input ? args.input.map(parseChainRef) : args.input_file ? loadInputDataset(args.input_file) : [];
     const plugin = await createHeadlessPlugin();
     fs.mkdirSync(args.output_dir, { recursive: true });
 
