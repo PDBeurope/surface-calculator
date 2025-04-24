@@ -18,7 +18,7 @@ npm install -g surface-calculator
 ### From source code
 
 ```sh
-git clone https://github.com/midlik/surface-calculator
+git clone https://github.com/PDBeurope/surface-calculator
 cd surface-calculator
 npm install
 npm run build

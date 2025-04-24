@@ -18,14 +18,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/midlik/surface-calculator.git"
+    "url": "git+https://github.com/PDBeurope/surface-calculator.git"
   },
   "author": "Adam Midlik",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/midlik/surface-calculator/issues"
+    "url": "https://github.com/PDBeurope/surface-calculator/issues"
   },
-  "homepage": "https://github.com/midlik/surface-calculator#readme",
+  "homepage": "https://github.com/PDBeurope/surface-calculator#readme",
   "dependencies": {
     "gl": "^6.0.2",
     "molstar": "~4.5.0"
