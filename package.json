@@ -28,7 +28,7 @@
   "homepage": "https://github.com/PDBeurope/surface-calculator#readme",
   "dependencies": {
     "gl": "^6.0.2",
-    "molstar": "~4.5.0"
+    "molstar": "~4.13.0"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^2.6.4",
@@ -36,7 +36,7 @@
     "@types/pngjs": "^6.0.4",
     "eslint": "^9.9.0",
     "jpeg-js": "^0.4.4",
-    "typescript": "^5.3.3",
+    "typescript": "^5.7.3",
     "typescript-eslint": "^8.2.0"
   }
 }
