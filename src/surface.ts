@@ -5,6 +5,8 @@
  */
 
 import fs from 'fs';
+import path from 'path';
+
 import { GeometryControls } from 'molstar/lib/commonjs/extensions/geo-export/controls';
 import { VisualQuality, VisualQualityNames } from 'molstar/lib/commonjs/mol-geo/geometry/base';
 import { type GraphicsRenderObject } from 'molstar/lib/commonjs/mol-gl/render-object';
@@ -16,6 +18,7 @@ import { StructureRepresentation3D } from 'molstar/lib/commonjs/mol-plugin-state
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
 import { StateObjectCell } from 'molstar/lib/commonjs/mol-state';
+import { Unzip } from 'molstar/lib/commonjs/mol-util/zip/zip';
 import { getPolymerLabelAsymIds } from './chain-mapping';
 
 
@@ -105,13 +108,32 @@ function checkStructureAssemblyId(structureCell: StateObjectCell | undefined, as
     }
 }
 
-export async function exportGeometry(plugin: PluginContext, filename: string) {
+/** Export current 3D canvas geometry and return as ZIP data  */
+async function exportGeometry(plugin: PluginContext): Promise<Buffer<ArrayBuffer>> {
     plugin.canvas3d?.commit(true); // need to commit canvas3d before it is exported
     const geo = new GeometryControls(plugin);
     geo.behaviors.params.next({ format: 'obj' });
     const data = await geo.exportGeometry();
     const buffer = await data.blob.arrayBuffer();
-    fs.writeFileSync(filename, Buffer.from(buffer));
+    return Buffer.from(buffer);
+}
+
+/** Export current 3D canvas geometry to a ZIP file (including .mtl and .obj) */
+export async function saveGeometryZip(plugin: PluginContext, filename: string): Promise<void> {
+    const zipped = await exportGeometry(plugin);
+    fs.writeFileSync(filename, zipped);
+}
+
+/** Export current 3D canvas geometry to individual .mtl and .obj files (these file extensions will be added to `filename`) */
+export async function saveGeometryFiles(plugin: PluginContext, filename: string): Promise<void> {
+    const zipped = await exportGeometry(plugin);
+    const unzipped = await Unzip(zipped).run();
+    for (const key in unzipped) {
+        const data = unzipped[key];
+        if (!(data instanceof Uint8Array)) throw new Error(`Unzipped file ${key} is not Uint8Array`);
+        const ext = path.extname(key);
+        fs.writeFileSync(filename + ext, data);
+    }
 }
 
 export function getSurfaceMetadata(surface: Awaited<ReturnType<typeof computeSurface>>) {

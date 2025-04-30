@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file, following t
 
 - CLI syntax changed (`node lib/index.js X Y` -> `node lib/index.js --input-file X --output-dir Y`)
 - Added --input parameter as alternative to --input-file
+- Unzip outputs by default (use --zip to keep zipped)
 - Fail when wrong assembly ID provided
 - Docker container
 

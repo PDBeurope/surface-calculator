@@ -15,7 +15,7 @@ import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/s
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 import { createFilename, loadInputDataset, parseChainRef } from './input';
-import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, exportGeometry, getSurfaceMetadata, niceJsonStringify } from './surface';
+import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getSurfaceMetadata, niceJsonStringify, saveGeometryFiles, saveGeometryZip } from './surface';
 
 
 setFSModule(fs);
@@ -32,6 +32,7 @@ export interface Args {
     quality?: QualityLevel,
     probe?: number,
     granularity?: Granularity,
+    zip?: boolean,
     metadata?: boolean,
     molj?: boolean,
 }
@@ -52,6 +53,7 @@ export function parseArguments(): Args {
     parser.add_argument('--quality', { choices: QualityLevels, help: `Surface quality level. Default: ${DefaultSurfaceOptions.quality}` });
     parser.add_argument('--probe', { type: Number, help: `Probe radius. Default: ${DefaultSurfaceOptions.probeRadius}` });
     parser.add_argument('--granularity', { choices: Granularities, help: `'structure' to calculate surface of the structure as a whole, 'chain' to calculate surface of each chain separately. Default: ${DefaultSurfaceOptions.granularity}` });
+    parser.add_argument('--zip', { action: 'store_true', help: 'Output surface data zipped in {filename}.zip file, instead of {filename}.mtl and {filename}.obj' });
     parser.add_argument('--metadata', { action: 'store_true', help: 'Output additional file {filename}.metadata.json with mesh vertex metadata' });
     parser.add_argument('--molj', { action: 'store_true', help: 'Output additional file {filename}.molj with Molstar session, mostly for debugging' });
 
@@ -72,14 +74,22 @@ export async function main(args: Args): Promise<void> {
 
         const url = (args.source ?? DEFAULT_SOURCE).replace('{id}', chainRef.entryId);
         const surface = await computeSurface(plugin, { url, assemblyId: chainRef.assemblyId, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe, granularity: args.granularity });
+
         if (args.molj) {
             await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`));
         }
-        await exportGeometry(plugin, path.join(args.output_dir, `${filename}.zip`));
+
+        if (args.zip) {
+            await saveGeometryZip(plugin, path.join(args.output_dir, `${filename}.zip`));
+        } else {
+            await saveGeometryFiles(plugin, path.join(args.output_dir, filename));
+        }
+
         if (args.metadata) {
             const surfaceMetadata = getSurfaceMetadata(surface);
             fs.writeFileSync(path.join(args.output_dir, `${filename}.metadata.json`), niceJsonStringify(surfaceMetadata), { encoding: 'utf8' });
         }
+
         await plugin.clear();
     }
 
