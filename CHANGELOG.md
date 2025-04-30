@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file, following t
 
 - CLI syntax changed (`node lib/index.js X Y` -> `node lib/index.js --input-file X --output-dir Y`)
 - Added --input parameter as alternative to --input-file
+- Fail when wrong assembly ID provided
 
 ## [0.3.1] - 2025-04-14
 

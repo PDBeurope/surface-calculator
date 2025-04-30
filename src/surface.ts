@@ -15,6 +15,7 @@ import { ModelFromTrajectory, StructureComponent, StructureFromModel, Trajectory
 import { StructureRepresentation3D } from 'molstar/lib/commonjs/mol-plugin-state/transforms/representation';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
+import { StateObjectCell } from 'molstar/lib/commonjs/mol-state';
 import { getPolymerLabelAsymIds } from './chain-mapping';
 
 
@@ -59,6 +60,8 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
     if (!structure.data) throw new Error('structure.data is undefined');
     const labelAsymIds = getPolymerLabelAsymIds(structure.data, structureRef.authChainId);
 
+    checkStructureAssemblyId(plugin.state.data.selectQ(q => q.byRef(structure.ref)).at(0), structureRef.assemblyId);
+
     const expr = MolScriptBuilder.struct.generator.atomGroups({
         'chain-test': MolScriptBuilder.core.set.has([
             MolScriptBuilder.set(...labelAsymIds),
@@ -90,6 +93,16 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
         structure: surface.data!.sourceData,
         meshes: surface.data!.repr.renderObjects.filter(obj => obj.type === 'mesh') as GraphicsRenderObject<'mesh'>[],
     };
+}
+
+function checkStructureAssemblyId(structureCell: StateObjectCell | undefined, assemblyId: string | undefined) {
+    if (!structureCell) throw new Error('Structure cell does not exist');
+    if (assemblyId === undefined) return; // Deposited structure
+
+    const params = structureCell.transform.params;
+    if (params.type.name !== 'assembly' || params.type.params.id !== assemblyId) {
+        throw new Error(`Wrong structure: you wanted assembly ${assemblyId}, Molstar created assembly ${params.type.params.id}. Check you specified assembly ID of an existing assembly.`);
+    }
 }
 
 export async function exportGeometry(plugin: PluginContext, filename: string) {
