@@ -116,10 +116,10 @@ async function createHeadlessPlugin(): Promise<HeadlessPluginContext> {
 
 export async function getVersion() {
     try {
-        const packageJson = await require('../package.json');
+        const packageJson = await require('../package.json'); // eslint-disable-line @typescript-eslint/no-require-imports
         return packageJson.version ?? '0.0.0';
     } catch {
-        console.error('Failed to import package.json to retrieve version info')
+        console.error('Failed to import package.json to retrieve version info');
         return '0.0.0';
     }
 }
