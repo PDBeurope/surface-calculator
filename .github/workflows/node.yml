@@ -31,7 +31,7 @@ jobs:
       run: echo ${{ github.ref_name }} | egrep '^v[0-9]+\.[0-9]+\.[0-9]+\S*$'
 
   docker_build_and_push_to_gitlab:
-    needs: [build, valid_tag]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
