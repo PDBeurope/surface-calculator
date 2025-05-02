@@ -63,3 +63,16 @@ Job syntax is exactly the same as for `--input` parameter.
 Lines begining with # are ignored.
 
 See example in `examples/input.txt`.
+
+## Running in Docker
+
+[Docker image](./Dockerfile) for surface-calculator uses Xvfb to emulate X-server.
+
+```sh
+docker build . -t surface-calculator
+docker build . -t surface-calculator --platform linux/amd64  # if you need it for a different architecture
+docker run -v ~/data/output_1bvy:/out surface-calculator --input 1bvy --output-dir /out
+```
+
+Internal note: To publish Docker image to EBI container repository, create a git tag following semantic versioning with "v" prefix (e.g. "v1.2.3").
+See [CICD pipeline](./.github/workflows/node.yml) for details.

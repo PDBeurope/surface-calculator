@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - run: npm ci
+    - run: sudo apt-get install xvfb
+    - name: Lint
+      run: npm run lint
+    - name: Build
+      run: npm run build
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifact
+        path: lib/
+
+  valid_tag:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check that the tag follows semantic versioning with "v" prefix
+      run: echo ${{ github.ref_name }} | egrep '^v[0-9]+\.[0-9]+\.[0-9]+\S*$'
+
+  docker_build_and_push_to_gitlab:
+    needs: [build, valid_tag]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GitLab Container Registry
+        run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ vars.REGISTRY_URL }}
+
+      - name: Build and tag Docker image
+        run: docker build -t ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/surface-calculator:latest .
+
+      - name: Push Docker image to GitLab Container Registry
+        run: docker push ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/surface-calculator:latest
