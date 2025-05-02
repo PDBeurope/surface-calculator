@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file, following t
 - Added --input parameter as alternative to --input-file
 - Unzip outputs by default (use --zip to keep zipped)
 - Fail when wrong assembly ID provided
+- Option --version
 - Docker container
 
 ## [0.3.1] - 2025-04-14

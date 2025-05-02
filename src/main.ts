@@ -39,7 +39,7 @@ export interface Args {
 
 
 /** Return parsed command line arguments for `main` */
-export function parseArguments(): Args {
+export async function parseArguments(): Promise<Args> {
     const parser = new ArgumentParser({ description: 'Command-line application for computing molecular surfaces' });
 
     // Required params:
@@ -56,6 +56,7 @@ export function parseArguments(): Args {
     parser.add_argument('--zip', { action: 'store_true', help: 'Output surface data zipped in {filename}.zip file, instead of {filename}.mtl and {filename}.obj' });
     parser.add_argument('--metadata', { action: 'store_true', help: 'Output additional file {filename}.metadata.json with mesh vertex metadata' });
     parser.add_argument('--molj', { action: 'store_true', help: 'Output additional file {filename}.molj with Molstar session, mostly for debugging' });
+    parser.add_argument('--version', { action: 'version', version: await getVersion(), help: 'Print version info and exit.' });
 
     const args = parser.parse_args();
     return { ...args };
@@ -110,4 +111,15 @@ async function createHeadlessPlugin(): Promise<HeadlessPluginContext> {
         throw error;
     }
     return plugin;
+}
+
+
+export async function getVersion() {
+    try {
+        const packageJson = await require('../package.json');
+        return packageJson.version ?? '0.0.0';
+    } catch {
+        console.error('Failed to import package.json to retrieve version info')
+        return '0.0.0';
+    }
 }

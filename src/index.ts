@@ -9,4 +9,4 @@
 import { main, parseArguments } from './main';
 
 
-main(parseArguments());
+parseArguments().then(args => main(args));
