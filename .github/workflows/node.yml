@@ -24,6 +24,7 @@ jobs:
         path: lib/
 
   valid_tag:
+    needs: [build]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
