@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.set-version.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -22,23 +24,23 @@ jobs:
       with:
         name: lib
         path: lib/
+    - name: Print version
+      run: node lib/index.js --version
+    - name: Set VERSION variable
+      id: set-version
+      run: echo "VERSION=$(node lib/index.js --version)" >> $GITHUB_OUTPUT
 
   valid_tag:
     needs: [build]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
+    - name: Print version
+      run: echo "${{ needs.build.outputs.VERSION }}"
     - name: Check that the tag follows semantic versioning with "v" prefix
       run: echo ${{ github.ref_name }} | egrep '^v[0-9]+\.[0-9]+\.[0-9]+\S*$'
-    - name: Download build artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: lib
-        path: lib
-    - name: Print current version
-      run: node lib/index.js --version
-    - name: Check version matches git tag
-      run: test "v$(node lib/index.js --version)" == "${{ github.ref_name }}"
+    - name: Check that version matches git tag
+      run: test "v${{ needs.build.outputs.VERSION }}" == "${{ github.ref_name }}"
 
   docker_build_and_push_to_gitlab:
     needs: [build, valid_tag]
