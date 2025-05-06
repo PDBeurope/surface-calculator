@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-05-06
+
 - CLI syntax changed (`node lib/index.js X Y` -> `node lib/index.js --input-file X --output-dir Y`)
 - Added --input parameter as alternative to --input-file
 - Unzip outputs by default (use --zip to keep zipped)
