@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+- Shift output meshes to be correctly aligned with the input structures
+- Removed --zip option (always unzip)
+
 ## [0.4.0] - 2025-05-06
 
 - CLI syntax changed (`node lib/index.js X Y` -> `node lib/index.js --input-file X --output-dir Y`)

@@ -15,7 +15,7 @@ import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/s
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 import { createFilename, loadInputDataset, parseChainRef } from './input';
-import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getFirstVertex, getSurfaceMetadata, niceJsonStringify, saveGeometryFiles, saveGeometryZip } from './surface';
+import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getFirstVertex, getSurfaceMetadata, niceJsonStringify, saveGeometryFiles } from './surface';
 
 
 setFSModule(fs);
@@ -32,7 +32,6 @@ export interface Args {
     quality?: QualityLevel,
     probe?: number,
     granularity?: Granularity,
-    zip?: boolean,
     metadata?: boolean,
     molj?: boolean,
 }
@@ -53,7 +52,6 @@ export async function parseArguments(): Promise<Args> {
     parser.add_argument('--quality', { choices: QualityLevels, help: `Surface quality level. Default: ${DefaultSurfaceOptions.quality}` });
     parser.add_argument('--probe', { type: Number, help: `Probe radius. Default: ${DefaultSurfaceOptions.probeRadius}` });
     parser.add_argument('--granularity', { choices: Granularities, help: `'structure' to calculate surface of the structure as a whole, 'chain' to calculate surface of each chain separately. Default: ${DefaultSurfaceOptions.granularity}` });
-    parser.add_argument('--zip', { action: 'store_true', help: 'Output surface data zipped in {filename}.zip file, instead of {filename}.mtl and {filename}.obj' });
     parser.add_argument('--metadata', { action: 'store_true', help: 'Output additional file {filename}.metadata.json with mesh vertex metadata' });
     parser.add_argument('--molj', { action: 'store_true', help: 'Output additional file {filename}.molj with Molstar session, mostly for debugging' });
     parser.add_argument('--version', { action: 'version', version: await getVersion(), help: 'Print version info and exit.' });
@@ -81,12 +79,7 @@ export async function main(args: Args): Promise<void> {
             await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`));
         }
 
-        if (args.zip) {
-            throw new Error('NotImplementedError: mesh shift for zipped file');
-            await saveGeometryZip(plugin, path.join(args.output_dir, `${filename}.zip`));
-        } else {
-            await saveGeometryFiles(plugin, path.join(args.output_dir, filename), firstVertex);
-        }
+        await saveGeometryFiles(plugin, path.join(args.output_dir, filename), firstVertex);
 
         if (args.metadata) {
             const surfaceMetadata = getSurfaceMetadata(surface);

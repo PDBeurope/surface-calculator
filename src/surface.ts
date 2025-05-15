@@ -120,12 +120,6 @@ async function exportGeometry(plugin: PluginContext): Promise<Buffer<ArrayBuffer
     return Buffer.from(buffer);
 }
 
-/** Export current 3D canvas geometry to a ZIP file (including .mtl and .obj) */
-export async function saveGeometryZip(plugin: PluginContext, filename: string): Promise<void> {
-    const zipped = await exportGeometry(plugin);
-    fs.writeFileSync(filename, zipped);
-}
-
 /** Export current 3D canvas geometry to individual .mtl and .obj files (these file extensions will be added to `filename`).
  * If `firstVertex` is given, shift vertex coordinates in .obj file to align the first vertex with this. */
 export async function saveGeometryFiles(plugin: PluginContext, filename: string, firstVertex?: Vec3): Promise<void> {
