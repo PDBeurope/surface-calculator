@@ -14,8 +14,9 @@ import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
+import { saveGeometryFiles, saveNiceJson } from './export';
 import { createFilename, loadInputDataset, parseChainRef } from './input';
-import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getFirstVertex, getSurfaceMetadata, niceJsonStringify, saveGeometryFiles } from './surface';
+import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getFirstVertex, getSurfaceMetadata } from './surface';
 
 
 setFSModule(fs);
@@ -83,7 +84,7 @@ export async function main(args: Args): Promise<void> {
 
         if (args.metadata) {
             const surfaceMetadata = getSurfaceMetadata(surface);
-            fs.writeFileSync(path.join(args.output_dir, `${filename}.metadata.json`), niceJsonStringify(surfaceMetadata), { encoding: 'utf8' });
+            saveNiceJson(surfaceMetadata, path.join(args.output_dir, `${filename}.metadata.json`));
         }
 
         await plugin.clear();

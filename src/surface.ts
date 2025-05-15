@@ -4,13 +4,8 @@
  * @author Adam Midlik <midlik@gmail.com>
  */
 
-import fs from 'fs';
-import path from 'path';
-
-import { GeometryControls } from 'molstar/lib/commonjs/extensions/geo-export/controls';
 import { VisualQuality, VisualQualityNames } from 'molstar/lib/commonjs/mol-geo/geometry/base';
 import { type GraphicsRenderObject } from 'molstar/lib/commonjs/mol-gl/render-object';
-import { utf8Read, utf8Write } from 'molstar/lib/commonjs/mol-io/common/utf8';
 import { Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { Unit } from 'molstar/lib/commonjs/mol-model/structure';
 import { ResidueHydrophobicity } from 'molstar/lib/commonjs/mol-model/structure/model/types';
@@ -20,7 +15,6 @@ import { StructureRepresentation3D } from 'molstar/lib/commonjs/mol-plugin-state
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
 import { StateObjectCell } from 'molstar/lib/commonjs/mol-state';
-import { Unzip } from 'molstar/lib/commonjs/mol-util/zip/zip';
 import { getPolymerLabelAsymIds } from './chain-mapping';
 
 
@@ -110,32 +104,6 @@ function checkStructureAssemblyId(structureCell: StateObjectCell | undefined, as
     }
 }
 
-/** Export current 3D canvas geometry and return as ZIP data  */
-async function exportGeometry(plugin: PluginContext): Promise<Buffer<ArrayBuffer>> {
-    plugin.canvas3d?.commit(true); // need to commit canvas3d before it is exported
-    const geo = new GeometryControls(plugin);
-    geo.behaviors.params.next({ format: 'obj' });
-    const data = await geo.exportGeometry();
-    const buffer = await data.blob.arrayBuffer();
-    return Buffer.from(buffer);
-}
-
-/** Export current 3D canvas geometry to individual .mtl and .obj files (these file extensions will be added to `filename`).
- * If `firstVertex` is given, shift vertex coordinates in .obj file to align the first vertex with this. */
-export async function saveGeometryFiles(plugin: PluginContext, filename: string, firstVertex?: Vec3): Promise<void> {
-    const zipped = await exportGeometry(plugin);
-    const unzipped = await Unzip(zipped).run();
-    for (const key in unzipped) {
-        let data = unzipped[key];
-        if (!(data instanceof Uint8Array)) throw new Error(`Unzipped file ${key} is not Uint8Array`);
-        const ext = path.extname(key);
-        if (ext === '.obj' && firstVertex !== undefined) {
-            data = applyMeshShift(data, firstVertex);
-        }
-        fs.writeFileSync(filename + ext, data);
-    }
-}
-
 export function getSurfaceMetadata(surface: Awaited<ReturnType<typeof computeSurface>>) {
     const unitOffsets = getUnitOffsets(surface.structure.units);
     const group_properties = getGroupProps(surface.structure.units);
@@ -189,7 +157,7 @@ function getGroupProps(units: readonly Unit[]) {
     return props;
 }
 
-function hydrophobicity(label_comp_id: string, type: 'DGwif' | 'DGwoct' | 'Oct-IF') { // DGwif = DG water-membrane, DGwoct = DG water-octanol, Oct-IF = DG difference
+function hydrophobicity(label_comp_id: string, _type: 'DGwif' | 'DGwoct' | 'Oct-IF') { // DGwif = DG water-membrane, DGwoct = DG water-octanol, Oct-IF = DG difference
     return (ResidueHydrophobicity as Partial<Record<string, number[]>>)[label_comp_id]?.[scaleIndexMap.DGwif] ?? null;
 }
 const scaleIndexMap = { 'DGwif': 0, 'DGwoct': 1, 'Oct-IF': 2 };
@@ -232,35 +200,4 @@ export function getFirstVertex(meshes: GraphicsRenderObject<'mesh'>[]): Vec3 | u
     const positions = mesh.values.aPosition.ref.value;
     if (positions.length < 3) return undefined;
     return Vec3.fromArray(Vec3(), positions, 0);
-}
-
-/** JSON.stringify object of objects of arrays, with putting each array on separate line (dumb implementation but enough for what we need). */
-export function niceJsonStringify(data: Record<string, Record<string, any[]>>) {
-    return JSON.stringify(data)
-        .replace(/("\w*":)\{/g, '\n  $1 {')
-        .replace(/("\w*":)\[/g, '\n    $1 [')
-        .replace(/\]\}/g, ']\n  }')
-        .replace(/\}\}/g, '}\n}\n');
-}
-
-/** Shift vertices in Wavefront .obj file so that the first vertex is at coordinates `firstVertex` */
-function applyMeshShift(objData: Uint8Array, firstVertex: Vec3): Uint8Array {
-    const str = Buffer.from(objData).toString('utf8');
-    const lines = str.split('\n');
-    const out: string[] = [];
-    let shift: Vec3 | undefined = undefined;
-    for (const line of lines) {
-        if (line.startsWith('v ')) {
-            const [_, x, y, z] = line.split(/\s+/);
-            const xyz = Vec3.create(Number.parseFloat(x), Number.parseFloat(y), Number.parseFloat(z));
-            if (!shift) {
-                shift = Vec3.sub(Vec3(), firstVertex, xyz);
-            }
-            Vec3.add(xyz, xyz, shift);
-            out.push(`v ${xyz[0].toFixed(3)} ${xyz[1].toFixed(3)} ${xyz[2].toFixed(3)}`);
-        } else {
-            out.push(line);
-        }
-    }
-    return Buffer.from(out.join('\n'), 'utf8');
 }
