@@ -167,15 +167,10 @@ const scaleIndexMap = { 'DGwif': 0, 'DGwoct': 1, 'Oct-IF': 2 };
 function getVertexProps(meshes: GraphicsRenderObject<'mesh'>[], unitOffsets: Record<number, number>) {
     const props = {
         group_index: [] as number[],
-        // debug TODO remove
-        x: [] as number[],
-        y: [] as number[],
-        z: [] as number[],
     };
     for (let iMesh = 0; iMesh < meshes.length; iMesh++) {
         const mesh = meshes[iMesh];
         const groups = mesh.values.aGroup.ref.value;
-        const positions = mesh.values.aPosition.ref.value;
 
         // Clipping `groups` array because in practice it contains many more elements than just one-per-vertex (don't know why)
         const metadataVertexCount: number | undefined = (mesh.values.meta.ref.value as any)?.originalData?.vertexCount;
@@ -185,15 +180,12 @@ function getVertexProps(meshes: GraphicsRenderObject<'mesh'>[], unitOffsets: Rec
             const groupIndexWithinMesh = groups[iVertex];
             const groupIndex = unitOffsets[iMesh] + groupIndexWithinMesh;
             props.group_index.push(groupIndex);
-            props.x.push(positions[iVertex * 3 + 0]);
-            props.y.push(positions[iVertex * 3 + 1]);
-            props.z.push(positions[iVertex * 3 + 2]);
         }
     }
     return props;
 }
 
-/** Return vertex properties (value per vertex) */
+/** Return coordinates of the first vertex */
 export function getFirstVertex(meshes: GraphicsRenderObject<'mesh'>[]): Vec3 | undefined {
     const mesh = meshes[0];
     if (!mesh) return undefined;

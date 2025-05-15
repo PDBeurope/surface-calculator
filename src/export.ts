@@ -13,7 +13,7 @@ import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { Unzip } from 'molstar/lib/commonjs/mol-util/zip/zip';
 
 
-/** Export current 3D canvas geometry and return as ZIP data  */
+/** Export current 3D canvas geometry and return as ZIP data (exported mesh vertices might be shifted by a constant vector!) */
 async function exportGeometry(plugin: PluginContext): Promise<Buffer<ArrayBuffer>> {
     plugin.canvas3d?.commit(true); // need to commit canvas3d before it is exported
     const geo = new GeometryControls(plugin);

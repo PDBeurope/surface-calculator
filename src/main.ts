@@ -74,12 +74,12 @@ export async function main(args: Args): Promise<void> {
 
         const url = (args.source ?? DEFAULT_SOURCE).replace('{id}', chainRef.entryId);
         const surface = await computeSurface(plugin, { url, assemblyId: chainRef.assemblyId, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe, granularity: args.granularity });
-        const firstVertex = getFirstVertex(surface.meshes);
 
         if (args.molj) {
             await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`));
         }
 
+        const firstVertex = getFirstVertex(surface.meshes);
         await saveGeometryFiles(plugin, path.join(args.output_dir, filename), firstVertex);
 
         if (args.metadata) {
