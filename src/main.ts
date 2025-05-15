@@ -15,7 +15,7 @@ import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/s
 import { ExternalModules } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 import { createFilename, loadInputDataset, parseChainRef } from './input';
-import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getSurfaceMetadata, niceJsonStringify, saveGeometryFiles, saveGeometryZip } from './surface';
+import { DefaultSurfaceOptions, Granularities, Granularity, QualityLevel, QualityLevels, computeSurface, getFirstVertex, getSurfaceMetadata, niceJsonStringify, saveGeometryFiles, saveGeometryZip } from './surface';
 
 
 setFSModule(fs);
@@ -75,15 +75,17 @@ export async function main(args: Args): Promise<void> {
 
         const url = (args.source ?? DEFAULT_SOURCE).replace('{id}', chainRef.entryId);
         const surface = await computeSurface(plugin, { url, assemblyId: chainRef.assemblyId, authChainId: chainRef.chainId }, { quality: args.quality, probeRadius: args.probe, granularity: args.granularity });
+        const firstVertex = getFirstVertex(surface.meshes);
 
         if (args.molj) {
             await plugin.saveStateSnapshot(path.join(args.output_dir, `${filename}.molj`));
         }
 
         if (args.zip) {
+            throw new Error('NotImplementedError: mesh shift for zipped file');
             await saveGeometryZip(plugin, path.join(args.output_dir, `${filename}.zip`));
         } else {
-            await saveGeometryFiles(plugin, path.join(args.output_dir, filename));
+            await saveGeometryFiles(plugin, path.join(args.output_dir, filename), firstVertex);
         }
 
         if (args.metadata) {

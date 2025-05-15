@@ -10,6 +10,8 @@ import path from 'path';
 import { GeometryControls } from 'molstar/lib/commonjs/extensions/geo-export/controls';
 import { VisualQuality, VisualQualityNames } from 'molstar/lib/commonjs/mol-geo/geometry/base';
 import { type GraphicsRenderObject } from 'molstar/lib/commonjs/mol-gl/render-object';
+import { utf8Read, utf8Write } from 'molstar/lib/commonjs/mol-io/common/utf8';
+import { Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { Unit } from 'molstar/lib/commonjs/mol-model/structure';
 import { ResidueHydrophobicity } from 'molstar/lib/commonjs/mol-model/structure/model/types';
 import { Download, ParseCif } from 'molstar/lib/commonjs/mol-plugin-state/transforms/data';
@@ -124,14 +126,18 @@ export async function saveGeometryZip(plugin: PluginContext, filename: string): 
     fs.writeFileSync(filename, zipped);
 }
 
-/** Export current 3D canvas geometry to individual .mtl and .obj files (these file extensions will be added to `filename`) */
-export async function saveGeometryFiles(plugin: PluginContext, filename: string): Promise<void> {
+/** Export current 3D canvas geometry to individual .mtl and .obj files (these file extensions will be added to `filename`).
+ * If `firstVertex` is given, shift vertex coordinates in .obj file to align the first vertex with this. */
+export async function saveGeometryFiles(plugin: PluginContext, filename: string, firstVertex?: Vec3): Promise<void> {
     const zipped = await exportGeometry(plugin);
     const unzipped = await Unzip(zipped).run();
     for (const key in unzipped) {
-        const data = unzipped[key];
+        let data = unzipped[key];
         if (!(data instanceof Uint8Array)) throw new Error(`Unzipped file ${key} is not Uint8Array`);
         const ext = path.extname(key);
+        if (ext === '.obj' && firstVertex !== undefined) {
+            data = applyMeshShift(data, firstVertex);
+        }
         fs.writeFileSync(filename + ext, data);
     }
 }
@@ -199,10 +205,15 @@ const scaleIndexMap = { 'DGwif': 0, 'DGwoct': 1, 'Oct-IF': 2 };
 function getVertexProps(meshes: GraphicsRenderObject<'mesh'>[], unitOffsets: Record<number, number>) {
     const props = {
         group_index: [] as number[],
+        // debug TODO remove
+        x: [] as number[],
+        y: [] as number[],
+        z: [] as number[],
     };
     for (let iMesh = 0; iMesh < meshes.length; iMesh++) {
         const mesh = meshes[iMesh];
         const groups = mesh.values.aGroup.ref.value;
+        const positions = mesh.values.aPosition.ref.value;
 
         // Clipping `groups` array because in practice it contains many more elements than just one-per-vertex (don't know why)
         const metadataVertexCount: number | undefined = (mesh.values.meta.ref.value as any)?.originalData?.vertexCount;
@@ -212,9 +223,21 @@ function getVertexProps(meshes: GraphicsRenderObject<'mesh'>[], unitOffsets: Rec
             const groupIndexWithinMesh = groups[iVertex];
             const groupIndex = unitOffsets[iMesh] + groupIndexWithinMesh;
             props.group_index.push(groupIndex);
+            props.x.push(positions[iVertex * 3 + 0]);
+            props.y.push(positions[iVertex * 3 + 1]);
+            props.z.push(positions[iVertex * 3 + 2]);
         }
     }
     return props;
+}
+
+/** Return vertex properties (value per vertex) */
+export function getFirstVertex(meshes: GraphicsRenderObject<'mesh'>[]): Vec3 | undefined {
+    const mesh = meshes[0];
+    if (!mesh) return undefined;
+    const positions = mesh.values.aPosition.ref.value;
+    if (positions.length < 3) return undefined;
+    return Vec3.fromArray(Vec3(), positions, 0);
 }
 
 /** JSON.stringify object of objects of arrays, with putting each array on separate line (dumb implementation but enough for what we need). */
@@ -224,4 +247,26 @@ export function niceJsonStringify(data: Record<string, Record<string, any[]>>) {
         .replace(/("\w*":)\[/g, '\n    $1 [')
         .replace(/\]\}/g, ']\n  }')
         .replace(/\}\}/g, '}\n}\n');
+}
+
+/** Shift vertices in Wavefront .obj file so that the first vertex is at coordinates `firstVertex` */
+function applyMeshShift(objData: Uint8Array, firstVertex: Vec3): Uint8Array {
+    const str = Buffer.from(objData).toString('utf8');
+    const lines = str.split('\n');
+    const out: string[] = [];
+    let shift: Vec3 | undefined = undefined;
+    for (const line of lines) {
+        if (line.startsWith('v ')) {
+            const [_, x, y, z] = line.split(/\s+/);
+            const xyz = Vec3.create(Number.parseFloat(x), Number.parseFloat(y), Number.parseFloat(z));
+            if (!shift) {
+                shift = Vec3.sub(Vec3(), firstVertex, xyz);
+            }
+            Vec3.add(xyz, xyz, shift);
+            out.push(`v ${xyz[0].toFixed(3)} ${xyz[1].toFixed(3)} ${xyz[2].toFixed(3)}`);
+        } else {
+            out.push(line);
+        }
+    }
+    return Buffer.from(out.join('\n'), 'utf8');
 }
