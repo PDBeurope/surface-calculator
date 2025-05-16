@@ -4,6 +4,8 @@ lib/
 # Mac junk
 .DS_Store
 
+# Temporary files
+tmp/
 
 # Logs
 logs
