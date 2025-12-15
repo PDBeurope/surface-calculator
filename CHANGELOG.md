@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file, following t
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-12-15
+
 - Updated Molstar version to 4.18.0
 
 ## [0.5.0] - 2025-05-15
