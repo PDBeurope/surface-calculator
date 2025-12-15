@@ -59,7 +59,7 @@ export async function computeSurface(plugin: PluginContext, structureRef: Struct
     if (!structure.data) throw new Error('structure.data is undefined');
     const labelAsymIds = getPolymerLabelAsymIds(structure.data, structureRef.authChainId);
 
-    checkStructureAssemblyId(plugin.state.data.selectQ(q => q.byRef(structure.ref)).at(0), structureRef.assemblyId);
+    checkStructureAssemblyId(plugin.state.data.selectQ(q => q.byRef(structure.ref))[0], structureRef.assemblyId);
 
     const expr = MolScriptBuilder.struct.generator.atomGroups({
         'chain-test': MolScriptBuilder.core.set.has([
